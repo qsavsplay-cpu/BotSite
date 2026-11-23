@@ -2,145 +2,278 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2aabee">
 <title>Мои заметки и файлы</title>
 <style>
   :root {
-    --bg: #f4f6fb; --card: #ffffff; --text: #1c2333; --muted: #6b7489;
-    --accent: #2f6fed; --accent-text: #ffffff; --border: #dfe4ef; --danger: #d64545; --ok: #1f9d55;
+    --bg: #eef3f9; --bg2: #e3ecf7;
+    --card: rgba(255,255,255,.82); --solid: #ffffff;
+    --text: #17212f; --muted: #6f7f95;
+    --accent: #2aabee; --accent2: #6c63ff; --accent-text: #ffffff;
+    --border: rgba(23,33,47,.09); --danger: #ef4d5e; --ok: #27ae60;
+    --shadow: 0 10px 30px rgba(34,80,140,.10);
+    --grad: linear-gradient(135deg, #2aabee 0%, #5b7cfa 55%, #8b5cf6 100%);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #12151d; --card: #1b2030; --text: #e8ecf5; --muted: #8f99b3;
-      --accent: #5b8cff; --accent-text: #0e1220; --border: #2b3248; --danger: #ff6b6b; --ok: #4cc38a;
+      --bg: #0d1220; --bg2: #121a2e;
+      --card: rgba(28,36,58,.78); --solid: #1a2238;
+      --text: #e9eef8; --muted: #8a98b5;
+      --accent: #4cc0ff; --accent2: #8f86ff; --accent-text: #08111f;
+      --border: rgba(255,255,255,.08); --danger: #ff6b7b; --ok: #4cd08a;
+      --shadow: 0 12px 34px rgba(0,0,0,.35);
+      --grad: linear-gradient(135deg, #1b8fd1 0%, #4a5fe0 55%, #7448e0 100%);
     }
   }
-  * { box-sizing: border-box; }
-  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); }
-  .wrap { max-width: 860px; margin: 0 auto; padding: 20px 16px 60px; }
-  h1 { font-size: 22px; margin: 0; }
-  h2 { font-size: 17px; margin: 0 0 12px; }
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-top: 16px; }
-  .center { max-width: 380px; margin: 12vh auto 0; }
-  label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 4px; }
-  input[type=text], input[type=password], textarea {
-    width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--border);
-    background: var(--bg); color: var(--text); font: inherit;
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; min-height: 100vh; color: var(--text);
+    font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    background:
+      radial-gradient(900px 500px at 10% -10%, rgba(42,171,238,.22), transparent 60%),
+      radial-gradient(800px 500px at 100% 0%, rgba(139,92,246,.18), transparent 60%),
+      linear-gradient(180deg, var(--bg), var(--bg2));
+    background-attachment: fixed;
   }
-  textarea { min-height: 220px; resize: vertical; }
-  button {
-    font: inherit; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text);
-    padding: 9px 14px; border-radius: 10px;
-  }
-  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
-  button.danger { color: var(--danger); }
-  button:disabled { opacity: .5; cursor: default; }
-  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .space { justify-content: space-between; }
-  .grow { flex: 1; min-width: 0; }
-  .muted { color: var(--muted); font-size: 13px; }
-  .tabs { display: flex; gap: 6px; margin-top: 16px; }
-  .tabs button.active { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
-  .item { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--border); }
-  .item:first-child { border-top: 0; }
-  .item .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
-  .item .name:hover { color: var(--accent); }
-  .msg { margin-top: 12px; font-size: 14px; }
-  .msg.err { color: var(--danger); }
-  .msg.ok { color: var(--ok); }
   .hidden { display: none !important; }
-  .hint { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 16px 80px; }
+
+  /* эмодзи */
+  .emo { display: inline-flex; width: 1.25em; height: 1.25em; align-items: center; justify-content: center;
+         vertical-align: -0.22em; line-height: 1; font-size: inherit; flex: none; }
+  .emo img, .emo video, .emo svg { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+  /* кнопки и поля */
+  button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 12px;
+    background: var(--solid); border: 1px solid var(--border); font-weight: 600; font-size: 14px;
+    transition: transform .12s, box-shadow .2s, background .2s;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+  .btn:active { transform: translateY(0) scale(.98); }
+  .btn.primary { background: var(--grad); color: #fff; border-color: transparent; }
+  .btn.ghost { background: transparent; }
+  .btn.danger { color: var(--danger); }
+  .btn.icon { padding: 9px 11px; }
+  .btn:disabled { opacity: .55; pointer-events: none; }
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin: 14px 0 6px; }
+  input[type=text], input[type=password], textarea {
+    width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border);
+    background: var(--solid); color: var(--text); font: inherit; outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(42,171,238,.18); }
+  textarea { min-height: 300px; resize: vertical; line-height: 1.55; }
+
+  /* экран входа и настройки */
+  .auth { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
+  .auth-card {
+    width: 100%; max-width: 400px; background: var(--card); border: 1px solid var(--border);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    border-radius: 28px; padding: 32px 28px; box-shadow: var(--shadow); animation: rise .5s ease both;
+  }
+  .logo {
+    width: 72px; height: 72px; border-radius: 22px; background: var(--grad); color: #fff;
+    display: grid; place-items: center; font-size: 34px; margin: 0 auto 18px;
+    box-shadow: 0 14px 30px rgba(91,124,250,.45);
+  }
+  .auth h1 { text-align: center; font-size: 24px; margin: 0 0 6px; }
+  .auth .sub { text-align: center; color: var(--muted); font-size: 14px; line-height: 1.5; margin: 0 0 8px; }
+  .auth .btn.primary { width: 100%; justify-content: center; margin-top: 20px; padding: 13px; font-size: 15px; }
+  .err { color: var(--danger); font-size: 14px; margin-top: 12px; min-height: 18px; text-align: center; }
+  .link { color: var(--muted); font-size: 13px; text-decoration: underline; cursor: pointer; display: block; text-align: center; margin-top: 16px; }
+
+  /* шапка */
+  header.top {
+    position: sticky; top: 0; z-index: 20; margin: 0 -16px; padding: 14px 16px;
+    background: var(--card); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .top-in { max-width: 960px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+  .brand .logo { width: 44px; height: 44px; font-size: 22px; border-radius: 14px; margin: 0; box-shadow: none; }
+  .brand b { display: block; font-size: 17px; }
+  .brand span.u { font-size: 13px; color: var(--muted); }
+
+  /* герой */
+  .hero {
+    margin-top: 20px; padding: 24px; border-radius: 26px; color: #fff; background: var(--grad);
+    box-shadow: 0 18px 40px rgba(91,124,250,.35); position: relative; overflow: hidden;
+    animation: rise .5s ease both;
+  }
+  .hero::after { content: ""; position: absolute; width: 260px; height: 260px; right: -60px; top: -90px;
+    background: rgba(255,255,255,.14); border-radius: 50%; }
+  .hero h2 { margin: 0 0 4px; font-size: 22px; position: relative; z-index: 1; }
+  .hero p { margin: 0; opacity: .88; font-size: 14px; position: relative; z-index: 1; }
+  .stats { display: flex; gap: 12px; margin-top: 18px; position: relative; z-index: 1; flex-wrap: wrap; }
+  .stat { background: rgba(255,255,255,.18); border-radius: 16px; padding: 10px 16px; min-width: 110px; }
+  .stat b { display: block; font-size: 22px; }
+  .stat span { font-size: 12px; opacity: .85; }
+
+  /* вкладки и поиск */
+  .bar { display: flex; gap: 12px; align-items: center; margin-top: 20px; flex-wrap: wrap; }
+  .seg { display: inline-flex; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 4px; }
+  .seg button { padding: 9px 16px; border-radius: 10px; font-weight: 600; font-size: 14px; color: var(--muted);
+    display: inline-flex; gap: 8px; align-items: center; transition: all .2s; }
+  .seg button.active { background: var(--grad); color: #fff; box-shadow: 0 6px 16px rgba(91,124,250,.35); }
+  .search { flex: 1; min-width: 160px; position: relative; }
+  .search input { padding-left: 40px; }
+  .search .emo { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); opacity: .7; }
+
+  /* списки */
+  .section-head { display: flex; justify-content: space-between; align-items: center; margin: 22px 2px 12px; }
+  .section-head h3 { margin: 0; font-size: 17px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .item {
+    background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 14px;
+    display: flex; gap: 12px; align-items: center; cursor: pointer;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    transition: transform .15s, box-shadow .25s; animation: rise .4s ease both;
+  }
+  .item:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+  .ico {
+    width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; font-size: 24px; flex: none;
+    background: linear-gradient(135deg, rgba(42,171,238,.18), rgba(139,92,246,.18));
+  }
+  .meta { flex: 1; min-width: 0; }
+  .meta .t { font-weight: 600; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .meta .s { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+  .item .acts { display: flex; gap: 4px; }
+  .item .acts button { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; }
+  .item .acts button:hover { background: var(--border); }
+  .empty { text-align: center; color: var(--muted); padding: 50px 10px; font-size: 15px; line-height: 1.6; }
+  .empty .big { font-size: 44px; display: block; margin-bottom: 8px; }
+  .skeleton { height: 76px; border-radius: 18px;
+    background: linear-gradient(90deg, var(--card) 25%, var(--border) 50%, var(--card) 75%);
+    background-size: 200% 100%; animation: shimmer 1.2s infinite; }
+  .drop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; font-size: 22px; font-weight: 700;
+    background: rgba(42,171,238,.25); backdrop-filter: blur(6px); border: 4px dashed var(--accent); color: var(--text); }
+
+  /* редактор */
+  dialog { border: 0; padding: 0; background: transparent; color: var(--text); width: min(720px, 94vw); max-height: 92vh; }
+  dialog::backdrop { background: rgba(8,14,28,.55); backdrop-filter: blur(5px); }
+  .modal { background: var(--solid); border-radius: 24px; padding: 22px; box-shadow: 0 30px 80px rgba(0,0,0,.35); animation: rise .25s ease both; }
+  .modal-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .modal-head h3 { margin: 0; font-size: 18px; }
+  .modal-foot { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
+
+  /* уведомления */
+  #toasts { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+    z-index: 100; display: flex; flex-direction: column; gap: 8px; align-items: center; width: calc(100% - 32px); max-width: 420px; }
+  .toast { background: var(--solid); border: 1px solid var(--border); box-shadow: var(--shadow); border-radius: 14px;
+    padding: 12px 16px; font-size: 14px; display: flex; gap: 10px; align-items: center; animation: rise .25s ease both; width: 100%; }
+  .toast.err { border-color: var(--danger); }
+
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+  @media (max-width: 560px) {
+    .brand b { font-size: 15px; }
+    .btn .lbl { display: none; }
+    .btn.keep .lbl { display: inline; }
+    .hero h2 { font-size: 19px; }
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <!-- Первичная настройка (если в CONFIG не указан токен) -->
-  <div id="setup" class="card center hidden">
-    <h2>Первая настройка</h2>
-    <p class="hint">Один раз укажи данные GitHub. Они сохранятся только в этом браузере.</p>
-    <label>Имя владельца на GitHub (логин)</label>
+<!-- Первая настройка (если в CONFIG не указан токен) -->
+<div id="setup" class="auth hidden">
+  <div class="auth-card">
+    <div class="logo"><span data-emo="🔒"></span></div>
+    <h1>Первая настройка</h1>
+    <p class="sub">Один раз укажи данные GitHub — они сохранятся только в этом браузере.</p>
+    <label>Логин на GitHub</label>
     <input type="text" id="s-owner" autocomplete="off">
-    <label>GITHUB_TOKEN (тот же, что в .env)</label>
+    <label>GITHUB_TOKEN (из .env)</label>
     <input type="password" id="s-token" autocomplete="off">
     <label>GITHUB_REPO</label>
     <input type="text" id="s-repo" value="school-bot-data">
     <label>USERS_REPO</label>
     <input type="text" id="s-users" value="logins-passwords">
-    <div class="row" style="margin-top:16px"><button class="primary" id="s-save">Сохранить</button></div>
-    <div id="s-msg" class="msg err"></div>
-  </div>
-
-  <!-- Вход -->
-  <div id="login" class="card center hidden">
-    <h2>🔑 Вход</h2>
-    <p class="hint">Логин и пароль выдаёт Telegram-бот по команде /start (новый пароль — /newpass).</p>
-    <label>Логин</label>
-    <input type="text" id="l-login" autocomplete="username" placeholder="user_ab12cd">
-    <label>Пароль</label>
-    <input type="password" id="l-pass" autocomplete="current-password">
-    <div class="row" style="margin-top:16px"><button class="primary" id="l-go">Войти</button></div>
-    <div id="l-msg" class="msg err"></div>
-    <p class="hint" style="margin-top:18px"><a href="#" id="l-reset" class="hidden" style="color:var(--muted)">Сменить настройки GitHub</a></p>
-  </div>
-
-  <!-- Основной экран -->
-  <div id="app" class="hidden">
-    <div class="row space">
-      <div>
-        <h1>📂 Мои заметки и файлы</h1>
-        <div class="muted">Логин: <b id="a-login"></b></div>
-      </div>
-      <div class="row">
-        <button id="a-refresh">Обновить</button>
-        <button id="a-out">Выйти</button>
-      </div>
-    </div>
-
-    <div class="tabs">
-      <button id="t-notes" class="active">📝 Заметки</button>
-      <button id="t-files">📎 Файлы</button>
-    </div>
-
-    <div id="p-notes" class="card">
-      <div class="row space" style="margin-bottom:8px">
-        <h2 style="margin:0">Заметки</h2>
-        <button class="primary" id="n-new">+ Новая заметка</button>
-      </div>
-      <div id="n-list" class="muted">Загрузка…</div>
-    </div>
-
-    <div id="p-files" class="card hidden">
-      <div class="row space" style="margin-bottom:8px">
-        <h2 style="margin:0">Файлы</h2>
-        <div>
-          <input type="file" id="f-input" class="hidden" multiple>
-          <button class="primary" id="f-up">⬆ Загрузить файл</button>
-        </div>
-      </div>
-      <div id="f-list" class="muted">Загрузка…</div>
-    </div>
-
-    <div id="editor" class="card hidden">
-      <div class="row space">
-        <h2 id="e-title" style="margin:0"></h2>
-        <button id="e-close">✕ Закрыть</button>
-      </div>
-      <textarea id="e-text" style="margin-top:12px"></textarea>
-      <div class="row" style="margin-top:12px">
-        <button class="primary" id="e-save">Сохранить в GitHub</button>
-      </div>
-    </div>
-
-    <div id="a-msg" class="msg"></div>
+    <button class="btn primary" id="s-save">Сохранить</button>
+    <div id="s-msg" class="err"></div>
   </div>
 </div>
+
+<!-- Вход -->
+<div id="login" class="auth hidden">
+  <div class="auth-card">
+    <div class="logo"><span data-emo="🔑"></span></div>
+    <h1>Добро пожаловать</h1>
+    <p class="sub">Логин и пароль выдаёт Telegram-бот по команде /start (новый пароль — /newpass).</p>
+    <label>Логин</label>
+    <input type="text" id="l-login" autocomplete="username" placeholder="user_ab12cd" autocapitalize="off">
+    <label>Пароль</label>
+    <input type="password" id="l-pass" autocomplete="current-password">
+    <button class="btn primary" id="l-go">Войти</button>
+    <div id="l-msg" class="err"></div>
+    <a class="link hidden" id="l-reset">Сменить настройки GitHub</a>
+  </div>
+</div>
+
+<!-- Основной экран -->
+<div id="app" class="wrap hidden">
+  <header class="top"><div class="top-in">
+    <div class="brand">
+      <div class="logo"><span data-emo="📂"></span></div>
+      <div><b>Мои данные</b><span class="u" id="a-login"></span></div>
+    </div>
+    <button class="btn icon ghost" id="a-refresh" title="Обновить"><span data-emo="🔄"></span></button>
+    <button class="btn" id="a-out"><span data-emo="🚪"></span><span class="lbl">Выйти</span></button>
+  </div></header>
+
+  <section class="hero">
+    <h2>Привет! <span data-emo="👋"></span></h2>
+    <p>Всё, что ты сохраняешь в Telegram-боте, лежит здесь — читай, правь и скачивай.</p>
+    <div class="stats">
+      <div class="stat"><b id="st-notes">–</b><span>заметок</span></div>
+      <div class="stat"><b id="st-files">–</b><span>файлов</span></div>
+    </div>
+  </section>
+
+  <div class="bar">
+    <div class="seg">
+      <button id="t-notes" class="active"><span data-emo="📝"></span>Заметки</button>
+      <button id="t-files"><span data-emo="📎"></span>Файлы</button>
+    </div>
+    <div class="search"><span data-emo="🔍"></span><input type="text" id="q" placeholder="Поиск…" autocomplete="off"></div>
+  </div>
+
+  <div class="section-head">
+    <h3 id="sec-title">Заметки</h3>
+    <div>
+      <input type="file" id="f-input" class="hidden" multiple>
+      <button class="btn primary keep" id="act-main"><span data-emo="➕"></span><span class="lbl" id="act-lbl">Новая заметка</span></button>
+    </div>
+  </div>
+  <div id="list" class="grid"></div>
+</div>
+
+<dialog id="editor">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="e-title"></h3>
+      <button class="btn icon ghost" id="e-close" title="Закрыть">✕</button>
+    </div>
+    <textarea id="e-text" placeholder="Текст заметки…"></textarea>
+    <div class="modal-foot">
+      <button class="btn" id="e-cancel">Отмена</button>
+      <button class="btn primary" id="e-save"><span data-emo="💾"></span>Сохранить</button>
+    </div>
+  </div>
+</dialog>
+
+<div id="drop" class="drop hidden"><span data-emo="⬆️"></span>&nbsp;Отпусти файл, чтобы загрузить</div>
+<div id="toasts"></div>
 
 <script>
 /* ============ НАСТРОЙКИ ============
    Можно заполнить здесь (тогда токен будет виден всем, кто откроет код страницы!),
-   а можно оставить пустым — тогда сайт спросит данные при первом запуске
-   и сохранит их только в браузере. */
+   а можно оставить пустым — сайт спросит данные при первом запуске
+   и сохранит их только в этом браузере. */
 const CONFIG = {
   OWNER: "",                 // твой логин на GitHub
   TOKEN: "",                 // GITHUB_TOKEN из .env
@@ -151,6 +284,7 @@ const CONFIG = {
 
 const PBKDF2_ITERATIONS = 200000; // как в bot.py
 const $ = (id) => document.getElementById(id);
+const norm = (ch) => ch.replace(/\uFE0F/g, "");
 
 function getCfg() {
   if (CONFIG.OWNER && CONFIG.TOKEN) return { ...CONFIG, fromFile: true };
@@ -161,19 +295,15 @@ function getCfg() {
   return null;
 }
 let cfg = getCfg();
-let session = null;     // { login }
+let session = null;
 let tab = "notes";
-let editing = null;     // { path, sha|null, isNew }
+let editing = null;
+let cache = { notes: [], files: [] };
 
 /* ---------- помощники ---------- */
 function show(id, on = true) { $(id).classList.toggle("hidden", !on); }
-function say(text, kind) { const m = $("a-msg"); m.textContent = text || ""; m.className = "msg " + (kind || ""); }
 function encPath(p) { return p.split("/").map(encodeURIComponent).join("/"); }
-function hexToBytes(hex) {
-  const out = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
-  return out;
-}
+function hexToBytes(hex) { const o = new Uint8Array(hex.length / 2); for (let i = 0; i < o.length; i++) o[i] = parseInt(hex.substr(i * 2, 2), 16); return o; }
 function bytesToHex(buf) { return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join(""); }
 function bytesToB64(bytes) {
   let bin = ""; const chunk = 0x8000;
@@ -182,100 +312,168 @@ function bytesToB64(bytes) {
 }
 async function hashPassword(password, saltHex) {
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
-  const bits = await crypto.subtle.deriveBits(
-    { name: "PBKDF2", hash: "SHA-256", salt: hexToBytes(saltHex), iterations: PBKDF2_ITERATIONS }, key, 256);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: hexToBytes(saltHex), iterations: PBKDF2_ITERATIONS }, key, 256);
   return bytesToHex(bits);
 }
-function timingSafeEqual(a, b) {
-  if (a.length !== b.length) return false;
-  let r = 0; for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return r === 0;
-}
+function timingSafeEqual(a, b) { if (a.length !== b.length) return false; let r = 0; for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i); return r === 0; }
 
 /* ---------- GitHub API ---------- */
-function ghUrl(repo, path) {
-  return `https://api.github.com/repos/${encodeURIComponent(cfg.OWNER)}/${encodeURIComponent(repo)}/contents/${encPath(path)}`;
-}
+function ghUrl(repo, path) { return `https://api.github.com/repos/${encodeURIComponent(cfg.OWNER)}/${encodeURIComponent(repo)}/contents/${encPath(path)}`; }
 function ghHeaders(raw) {
-  return {
-    "Authorization": "Bearer " + cfg.TOKEN,
-    "Accept": raw ? "application/vnd.github.raw+json" : "application/vnd.github+json",
-    "X-GitHub-Api-Version": "2022-11-28"
-  };
+  return { "Authorization": "Bearer " + cfg.TOKEN, "Accept": raw ? "application/vnd.github.raw+json" : "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
 }
 async function ghCheck(res) {
   if (res.ok) return res;
-  let detail = "";
-  try { detail = (await res.json()).message || ""; } catch (e) {}
-  const err = new Error(`GitHub ${res.status}: ${detail}`); err.status = res.status; throw err;
+  let d = ""; try { d = (await res.json()).message || ""; } catch (e) {}
+  const err = new Error(`GitHub ${res.status}: ${d}`); err.status = res.status; throw err;
 }
 async function ghList(repo, path) {
   const res = await fetch(ghUrl(repo, path), { headers: ghHeaders(false), cache: "no-store" });
   if (res.status === 404) return [];
-  await ghCheck(res);
-  return res.json();
+  await ghCheck(res); return res.json();
 }
 async function ghRaw(repo, path) {
   const res = await fetch(ghUrl(repo, path), { headers: ghHeaders(true), cache: "no-store" });
   if (res.status === 404) return null;
-  await ghCheck(res);
-  return res;
+  await ghCheck(res); return res;
 }
 async function ghSha(repo, path) {
   const res = await fetch(ghUrl(repo, path), { headers: ghHeaders(false), cache: "no-store" });
   if (res.status === 404) return null;
-  await ghCheck(res);
-  return (await res.json()).sha;
+  await ghCheck(res); return (await res.json()).sha;
 }
 async function ghPut(repo, path, bytes, message) {
   const sha = await ghSha(repo, path);
   const body = { message, content: bytesToB64(bytes) };
   if (sha) body.sha = sha;
-  const res = await fetch(ghUrl(repo, path), {
-    method: "PUT", headers: { ...ghHeaders(false), "Content-Type": "application/json" }, body: JSON.stringify(body)
-  });
-  await ghCheck(res);
+  await ghCheck(await fetch(ghUrl(repo, path), { method: "PUT", headers: { ...ghHeaders(false), "Content-Type": "application/json" }, body: JSON.stringify(body) }));
 }
 async function ghDelete(repo, path, message) {
   const sha = await ghSha(repo, path);
   if (!sha) return;
-  const res = await fetch(ghUrl(repo, path), {
-    method: "DELETE", headers: { ...ghHeaders(false), "Content-Type": "application/json" },
-    body: JSON.stringify({ message, sha })
-  });
-  await ghCheck(res);
+  await ghCheck(await fetch(ghUrl(repo, path), { method: "DELETE", headers: { ...ghHeaders(false), "Content-Type": "application/json" }, body: JSON.stringify({ message, sha }) }));
 }
 
-/* ---------- Экраны ---------- */
+/* ---------- Эмодзи из паков Telegram ----------
+   Бот выгружает иконки в папку emoji/ репозитория GITHUB_REPO.
+   Если их там нет — показываются обычные эмодзи. */
+let emojiIndex = {};
+const emojiBlobs = new Map();
+let lottiePromise = null;
+
+function loadLottie() {
+  if (window.lottie) return Promise.resolve();
+  if (!lottiePromise) lottiePromise = new Promise((ok, fail) => {
+    const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
+    s.onload = ok; s.onerror = fail; document.head.appendChild(s);
+  });
+  return lottiePromise;
+}
+async function emojiData(info) {
+  if (!emojiBlobs.has(info.file)) {
+    emojiBlobs.set(info.file, (async () => {
+      const res = await ghRaw(cfg.GITHUB_REPO, info.file);
+      return res ? await res.arrayBuffer() : null;
+    })());
+  }
+  return emojiBlobs.get(info.file);
+}
+async function loadEmojiIndex() {
+  try {
+    const res = await ghRaw(cfg.GITHUB_REPO, "emoji/index.json");
+    emojiIndex = res ? JSON.parse(await res.text()) : {};
+  } catch (e) { emojiIndex = {}; }
+}
+function makeEmoji(ch) {
+  const span = document.createElement("span");
+  span.className = "emo"; span.textContent = ch;
+  const info = emojiIndex[norm(ch)];
+  if (info) upgradeEmoji(span, info).catch(() => {});
+  return span;
+}
+async function upgradeEmoji(span, info) {
+  const buf = await emojiData(info);
+  if (!buf) return;
+  if (info.kind === "webp") {
+    const img = document.createElement("img"); img.alt = span.textContent;
+    img.src = URL.createObjectURL(new Blob([buf], { type: "image/webp" }));
+    span.textContent = ""; span.appendChild(img);
+  } else if (info.kind === "webm") {
+    const v = document.createElement("video");
+    v.src = URL.createObjectURL(new Blob([buf], { type: "video/webm" }));
+    v.autoplay = v.loop = v.muted = v.playsInline = true;
+    span.textContent = ""; span.appendChild(v);
+  } else if (info.kind === "tgs") {
+    await loadLottie();
+    const stream = new Blob([buf]).stream().pipeThrough(new DecompressionStream("gzip"));
+    const json = JSON.parse(await new Response(stream).text());
+    span.textContent = "";
+    window.lottie.loadAnimation({ container: span, renderer: "svg", loop: true, autoplay: true, animationData: json });
+  }
+}
+function hydrate(root = document) {
+  root.querySelectorAll("[data-emo]").forEach(el => {
+    const ch = el.getAttribute("data-emo");
+    el.removeAttribute("data-emo");
+    el.appendChild(makeEmoji(ch));
+  });
+}
+
+/* ---------- уведомления ---------- */
+function toast(text, kind, emoji) {
+  const t = document.createElement("div");
+  t.className = "toast " + (kind || "");
+  t.appendChild(makeEmoji(emoji || (kind === "err" ? "⚠️" : "✅")));
+  t.appendChild(document.createTextNode(text));
+  $("toasts").appendChild(t);
+  setTimeout(() => t.remove(), 3800);
+}
+
+/* ---------- форматирование ---------- */
+const MONTHS = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+function fmtDate(d) { return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}, ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; }
+function parseNoteDate(name) {
+  const m = name.match(/^(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})/);
+  return m ? new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6]) : null;
+}
+function parseFileDate(name) {
+  const m = name.match(/^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})_/);
+  return m ? new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6]) : null;
+}
+function fmtSize(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + " МБ" : Math.max(1, Math.round(n / 1024)) + " КБ"; }
+function fileEmoji(name) {
+  const ext = (name.split(".").pop() || "").toLowerCase();
+  if (["jpg","jpeg","png","gif","webp","bmp","svg"].includes(ext)) return "🖼";
+  if (["mp3","wav","ogg","m4a","flac"].includes(ext)) return "🎵";
+  if (["mp4","mov","avi","mkv","webm"].includes(ext)) return "🎬";
+  if (["zip","rar","7z","tar","gz"].includes(ext)) return "📦";
+  if (["pdf","doc","docx","txt","md","ppt","pptx","xls","xlsx","csv"].includes(ext)) return "📄";
+  return "📎";
+}
+
+/* ---------- экраны ---------- */
 function route() {
   show("setup", false); show("login", false); show("app", false);
   if (!cfg) { show("setup"); return; }
   if (!session) { show("login"); show("l-reset", !cfg.fromFile); return; }
   show("app");
-  $("a-login").textContent = session.login;
-  setTab(tab);
+  $("a-login").textContent = "@" + session.login;
+  refresh();
 }
 
-/* Настройка */
-$("s-save").onclick = () => {
-  const c = {
-    OWNER: $("s-owner").value.trim(), TOKEN: $("s-token").value.trim(),
-    GITHUB_REPO: $("s-repo").value.trim() || "school-bot-data",
-    USERS_REPO: $("s-users").value.trim() || "logins-passwords"
-  };
+$("s-save").onclick = async () => {
+  const c = { OWNER: $("s-owner").value.trim(), TOKEN: $("s-token").value.trim(),
+    GITHUB_REPO: $("s-repo").value.trim() || "school-bot-data", USERS_REPO: $("s-users").value.trim() || "logins-passwords" };
   if (!c.OWNER || !c.TOKEN) { $("s-msg").textContent = "Заполни логин GitHub и токен."; return; }
   localStorage.setItem("ghcfg", JSON.stringify(c));
-  cfg = getCfg(); route();
+  cfg = getCfg(); await loadEmojiIndex(); route();
 };
-$("l-reset").onclick = (e) => {
-  e.preventDefault(); localStorage.removeItem("ghcfg"); cfg = getCfg(); session = null; route();
-};
+$("l-reset").onclick = () => { localStorage.removeItem("ghcfg"); cfg = getCfg(); session = null; route(); };
 
-/* Вход: проверяем пароль по хешу из users.json (PBKDF2-SHA256, как в боте) */
 async function doLogin() {
-  const login = $("l-login").value.trim();
-  const pass = $("l-pass").value;
-  const msg = $("l-msg"); msg.textContent = "";
+  const login = $("l-login").value.trim(), pass = $("l-pass").value, msg = $("l-msg");
+  msg.textContent = "";
   if (!login || !pass) { msg.textContent = "Введи логин и пароль."; return; }
   $("l-go").disabled = true;
   try {
@@ -293,143 +491,164 @@ async function doLogin() {
   } finally { $("l-go").disabled = false; }
 }
 $("l-go").onclick = doLogin;
-$("l-pass").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
-$("l-login").addEventListener("keydown", (e) => { if (e.key === "Enter") $("l-pass").focus(); });
+$("l-pass").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+$("l-login").addEventListener("keydown", e => { if (e.key === "Enter") $("l-pass").focus(); });
+$("a-out").onclick = () => { session = null; sessionStorage.removeItem("session"); route(); };
+$("a-refresh").onclick = () => refresh();
 
-$("a-out").onclick = () => { session = null; sessionStorage.removeItem("session"); closeEditor(); route(); };
-$("a-refresh").onclick = () => setTab(tab);
+/* ---------- данные ---------- */
+const userDir = (sub) => `data/${session.login}/${sub}`;
 
-/* Вкладки */
-function setTab(t) {
-  tab = t;
-  $("t-notes").classList.toggle("active", t === "notes");
-  $("t-files").classList.toggle("active", t === "files");
-  show("p-notes", t === "notes"); show("p-files", t === "files");
-  say("");
-  if (t === "notes") loadNotes(); else loadFiles();
-}
-$("t-notes").onclick = () => { closeEditor(); setTab("notes"); };
-$("t-files").onclick = () => { closeEditor(); setTab("files"); };
-
-function userDir(sub) { return `data/${session.login}/${sub}`; }
-
-function renderList(el, items, handlers, empty) {
-  el.textContent = "";
-  if (!items.length) { el.textContent = empty; return; }
-  el.className = "";
-  for (const it of items) {
-    const row = document.createElement("div"); row.className = "item";
-    const name = document.createElement("div"); name.className = "name"; name.textContent = it.name; name.title = it.name;
-    name.onclick = () => handlers.open(it);
-    row.appendChild(name);
-    const size = document.createElement("span"); size.className = "muted";
-    size.textContent = it.size > 1048576 ? (it.size / 1048576).toFixed(1) + " МБ" : Math.max(1, Math.round(it.size / 1024)) + " КБ";
-    row.appendChild(size);
-    const del = document.createElement("button"); del.className = "danger"; del.textContent = "🗑";
-    del.title = "Удалить"; del.onclick = () => handlers.del(it);
-    row.appendChild(del);
-    el.appendChild(row);
+async function refresh() {
+  setTab(tab, true);
+  try {
+    const [n, f] = await Promise.all([ghList(cfg.GITHUB_REPO, userDir("notes")), ghList(cfg.GITHUB_REPO, userDir("files"))]);
+    cache.notes = n.filter(x => x.type === "file").sort((a, b) => b.name.localeCompare(a.name));
+    cache.files = f.filter(x => x.type === "file").sort((a, b) => b.name.localeCompare(a.name));
+    $("st-notes").textContent = cache.notes.length;
+    $("st-files").textContent = cache.files.length;
+    render();
+  } catch (e) {
+    $("list").innerHTML = ""; toast(e.message, "err");
   }
 }
 
-/* Заметки */
-async function loadNotes() {
-  const el = $("n-list"); el.className = "muted"; el.textContent = "Загрузка…";
-  try {
-    const items = (await ghList(cfg.GITHUB_REPO, userDir("notes")))
-      .filter(f => f.type === "file").sort((a, b) => b.name.localeCompare(a.name));
-    renderList(el, items, { open: openNote, del: deleteNote }, "Пока нет заметок. Отправь боту /save текст или нажми «Новая заметка».");
-  } catch (e) { el.textContent = "Ошибка: " + e.message; }
+function setTab(t, loading) {
+  tab = t;
+  $("t-notes").classList.toggle("active", t === "notes");
+  $("t-files").classList.toggle("active", t === "files");
+  $("sec-title").textContent = t === "notes" ? "Заметки" : "Файлы";
+  $("act-lbl").textContent = t === "notes" ? "Новая заметка" : "Загрузить файл";
+  if (loading) {
+    const l = $("list"); l.innerHTML = "";
+    for (let i = 0; i < 4; i++) { const s = document.createElement("div"); s.className = "skeleton"; l.appendChild(s); }
+  } else render();
 }
+$("t-notes").onclick = () => setTab("notes");
+$("t-files").onclick = () => setTab("files");
+$("q").addEventListener("input", () => render());
+
+function render() {
+  const list = $("list"); list.innerHTML = "";
+  const q = $("q").value.trim().toLowerCase();
+  const items = cache[tab].filter(it => !q || it.name.toLowerCase().includes(q));
+  if (!items.length) {
+    const e = document.createElement("div"); e.className = "empty"; e.style.gridColumn = "1 / -1";
+    const big = document.createElement("span"); big.className = "big"; big.appendChild(makeEmoji(tab === "notes" ? "📝" : "📎"));
+    e.appendChild(big);
+    e.appendChild(document.createTextNode(q ? "Ничего не найдено." :
+      tab === "notes" ? "Пока нет заметок. Отправь боту /save текст или создай заметку здесь." : "Пока нет файлов. Пришли файл боту или загрузи его отсюда."));
+    list.appendChild(e); return;
+  }
+  items.forEach((it, i) => {
+    const row = document.createElement("div"); row.className = "item"; row.style.animationDelay = Math.min(i, 12) * 30 + "ms";
+    const ico = document.createElement("div"); ico.className = "ico"; ico.appendChild(makeEmoji(tab === "notes" ? "📝" : fileEmoji(it.name)));
+    const meta = document.createElement("div"); meta.className = "meta";
+    const t = document.createElement("div"); t.className = "t";
+    const s = document.createElement("div"); s.className = "s";
+    if (tab === "notes") {
+      const d = parseNoteDate(it.name);
+      t.textContent = d ? fmtDate(d) : it.name; s.textContent = fmtSize(it.size);
+    } else {
+      const d = parseFileDate(it.name);
+      t.textContent = it.name.replace(/^\d{8}_\d{6}_/, ""); s.textContent = (d ? fmtDate(d) + " · " : "") + fmtSize(it.size);
+    }
+    t.title = t.textContent; meta.append(t, s);
+    const acts = document.createElement("div"); acts.className = "acts";
+    if (tab === "files") {
+      const dl = document.createElement("button"); dl.title = "Скачать"; dl.appendChild(makeEmoji("⬇️"));
+      dl.onclick = (e) => { e.stopPropagation(); downloadFile(it); }; acts.appendChild(dl);
+    }
+    const del = document.createElement("button"); del.title = "Удалить"; del.appendChild(makeEmoji("🗑"));
+    del.onclick = (e) => { e.stopPropagation(); remove(it); }; acts.appendChild(del);
+    row.append(ico, meta, acts);
+    row.onclick = () => tab === "notes" ? openNote(it) : downloadFile(it);
+    list.appendChild(row);
+  });
+}
+
+/* ---------- заметки ---------- */
 async function openNote(it) {
-  say("");
   try {
     const res = await ghRaw(cfg.GITHUB_REPO, it.path);
-    const text = res ? await res.text() : "";
-    openEditor(it.name, text, { path: it.path, isNew: false });
-  } catch (e) { say("Ошибка: " + e.message, "err"); }
+    const d = parseNoteDate(it.name);
+    openEditor(d ? fmtDate(d) : it.name, res ? await res.text() : "", { path: it.path, isNew: false });
+  } catch (e) { toast(e.message, "err"); }
 }
-async function deleteNote(it) {
-  if (!confirm(`Удалить заметку «${it.name}»?`)) return;
-  try { await ghDelete(cfg.GITHUB_REPO, it.path, `Удалена заметка (${session.login}, сайт)`); say("Заметка удалена.", "ok"); loadNotes(); }
-  catch (e) { say("Ошибка: " + e.message, "err"); }
-}
-$("n-new").onclick = () => {
-  const d = new Date(), p = (n) => String(n).padStart(2, "0");
+function newNote() {
+  const d = new Date(), p = n => String(n).padStart(2, "0");
   const name = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}-${p(d.getMinutes())}-${p(d.getSeconds())}.md`;
   openEditor("Новая заметка", "", { path: userDir("notes") + "/" + name, isNew: true });
-};
-
-/* Редактор заметки */
-function openEditor(title, text, info) {
-  editing = info;
-  $("e-title").textContent = title;
-  $("e-text").value = text;
-  show("editor"); $("editor").scrollIntoView({ behavior: "smooth" });
 }
-function closeEditor() { editing = null; show("editor", false); }
-$("e-close").onclick = closeEditor;
+function openEditor(title, text, info) {
+  editing = info; $("e-title").textContent = title; $("e-text").value = text;
+  $("editor").showModal(); $("e-text").focus();
+}
+function closeEditor() { editing = null; if ($("editor").open) $("editor").close(); }
+$("e-close").onclick = closeEditor; $("e-cancel").onclick = closeEditor;
 $("e-save").onclick = async () => {
   if (!editing) return;
   const text = $("e-text").value;
-  if (editing.isNew && !text.trim()) { say("Заметка пустая.", "err"); return; }
+  if (editing.isNew && !text.trim()) { toast("Заметка пустая.", "err"); return; }
   $("e-save").disabled = true;
   try {
-    await ghPut(cfg.GITHUB_REPO, editing.path, new TextEncoder().encode(text),
-      `${editing.isNew ? "Заметка" : "Правка заметки"} от ${session.login} (сайт)`);
-    say("✅ Сохранено в GitHub!", "ok"); closeEditor(); loadNotes();
-  } catch (e) { say("Ошибка: " + e.message, "err"); }
+    await ghPut(cfg.GITHUB_REPO, editing.path, new TextEncoder().encode(text), `${editing.isNew ? "Заметка" : "Правка заметки"} от ${session.login} (сайт)`);
+    toast("Сохранено в GitHub!"); closeEditor(); refresh();
+  } catch (e) { toast(e.message, "err"); }
   finally { $("e-save").disabled = false; }
 };
 
-/* Файлы */
-async function loadFiles() {
-  const el = $("f-list"); el.className = "muted"; el.textContent = "Загрузка…";
-  try {
-    const items = (await ghList(cfg.GITHUB_REPO, userDir("files")))
-      .filter(f => f.type === "file").sort((a, b) => b.name.localeCompare(a.name));
-    renderList(el, items, { open: downloadFile, del: deleteFile }, "Пока нет файлов. Пришли файл боту или загрузи отсюда.");
-  } catch (e) { el.textContent = "Ошибка: " + e.message; }
-}
+/* ---------- файлы ---------- */
 async function downloadFile(it) {
-  say("Скачиваю…");
+  toast("Скачиваю…", "", "⬇️");
   try {
     const res = await ghRaw(cfg.GITHUB_REPO, it.path);
     if (!res) throw new Error("файл не найден");
     const url = URL.createObjectURL(await res.blob());
-    const a = document.createElement("a"); a.href = url;
-    a.download = it.name.replace(/^\d{8}_\d{6}_/, ""); // убираем префикс с датой, который добавляет бот
+    const a = document.createElement("a"); a.href = url; a.download = it.name.replace(/^\d{8}_\d{6}_/, "");
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
-    say("");
-  } catch (e) { say("Ошибка: " + e.message, "err"); }
+  } catch (e) { toast(e.message, "err"); }
 }
-async function deleteFile(it) {
-  if (!confirm(`Удалить файл «${it.name}»?`)) return;
-  try { await ghDelete(cfg.GITHUB_REPO, it.path, `Удалён файл (${session.login}, сайт)`); say("Файл удалён.", "ok"); loadFiles(); }
-  catch (e) { say("Ошибка: " + e.message, "err"); }
+async function remove(it) {
+  if (!confirm(`Удалить «${it.name.replace(/^\d{8}_\d{6}_/, "")}»?`)) return;
+  try { await ghDelete(cfg.GITHUB_REPO, it.path, `Удалено (${session.login}, сайт)`); toast("Удалено.", "", "🗑"); refresh(); }
+  catch (e) { toast(e.message, "err"); }
 }
-$("f-up").onclick = () => $("f-input").click();
-$("f-input").onchange = async (e) => {
-  const files = [...e.target.files]; e.target.value = "";
+async function uploadFiles(files) {
   for (const f of files) {
-    if (f.size > 25 * 1024 * 1024) { say(`«${f.name}» больше 25 МБ — пропущен.`, "err"); continue; }
-    say(`Загружаю «${f.name}»…`);
+    if (f.size > 25 * 1024 * 1024) { toast(`«${f.name}» больше 25 МБ — пропущен.`, "err"); continue; }
+    toast(`Загружаю «${f.name}»…`, "", "⬆️");
     try {
-      const d = new Date(), p = (n) => String(n).padStart(2, "0");
+      const d = new Date(), p = n => String(n).padStart(2, "0");
       const stamp = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
-      const safe = f.name.replace(/[^\w.\-]/gu, "_");   // так же, как в боте
-      await ghPut(cfg.GITHUB_REPO, userDir("files") + `/${stamp}_${safe}`,
-        new Uint8Array(await f.arrayBuffer()), `Файл от ${session.login}: ${safe} (сайт)`);
-      say(`✅ «${f.name}» загружен.`, "ok");
-    } catch (err) { say("Ошибка: " + err.message, "err"); }
+      const safe = f.name.replace(/[^\w.\-]/gu, "_");
+      await ghPut(cfg.GITHUB_REPO, userDir("files") + `/${stamp}_${safe}`, new Uint8Array(await f.arrayBuffer()), `Файл от ${session.login}: ${safe} (сайт)`);
+      toast(`«${f.name}» загружен.`);
+    } catch (err) { toast(err.message, "err"); }
   }
-  loadFiles();
-};
+  setTab("files"); refresh();
+}
+$("act-main").onclick = () => tab === "notes" ? newNote() : $("f-input").click();
+$("f-input").onchange = (e) => { const fs = [...e.target.files]; e.target.value = ""; uploadFiles(fs); };
 
-/* Старт */
-try { session = JSON.parse(sessionStorage.getItem("session") || "null"); } catch (e) { session = null; }
-route();
+/* перетаскивание файлов на страницу */
+let dragDepth = 0;
+addEventListener("dragenter", (e) => { if (session && e.dataTransfer && [...e.dataTransfer.types].includes("Files")) { dragDepth++; show("drop"); } });
+addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; show("drop", false); } });
+addEventListener("dragover", (e) => e.preventDefault());
+addEventListener("drop", (e) => {
+  e.preventDefault(); dragDepth = 0; show("drop", false);
+  if (session && e.dataTransfer.files.length) uploadFiles([...e.dataTransfer.files]);
+});
+
+/* ---------- старт ---------- */
+(async function init() {
+  try { session = JSON.parse(sessionStorage.getItem("session") || "null"); } catch (e) { session = null; }
+  if (cfg) await loadEmojiIndex();
+  hydrate();
+  route();
+})();
 </script>
 </body>
 </html>
