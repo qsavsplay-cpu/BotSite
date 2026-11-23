@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Мои заметки и файлы</title>
+<style>
+  :root {
+    --bg: #f4f6fb; --card: #ffffff; --text: #1c2333; --muted: #6b7489;
+    --accent: #2f6fed; --accent-text: #ffffff; --border: #dfe4ef; --danger: #d64545; --ok: #1f9d55;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151d; --card: #1b2030; --text: #e8ecf5; --muted: #8f99b3;
+      --accent: #5b8cff; --accent-text: #0e1220; --border: #2b3248; --danger: #ff6b6b; --ok: #4cc38a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 20px 16px 60px; }
+  h1 { font-size: 22px; margin: 0; }
+  h2 { font-size: 17px; margin: 0 0 12px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-top: 16px; }
+  .center { max-width: 380px; margin: 12vh auto 0; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 4px; }
+  input[type=text], input[type=password], textarea {
+    width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); font: inherit;
+  }
+  textarea { min-height: 220px; resize: vertical; }
+  button {
+    font: inherit; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text);
+    padding: 9px 14px; border-radius: 10px;
+  }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+  button.danger { color: var(--danger); }
+  button:disabled { opacity: .5; cursor: default; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .space { justify-content: space-between; }
+  .grow { flex: 1; min-width: 0; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .tabs { display: flex; gap: 6px; margin-top: 16px; }
+  .tabs button.active { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  .item { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--border); }
+  .item:first-child { border-top: 0; }
+  .item .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+  .item .name:hover { color: var(--accent); }
+  .msg { margin-top: 12px; font-size: 14px; }
+  .msg.err { color: var(--danger); }
+  .msg.ok { color: var(--ok); }
+  .hidden { display: none !important; }
+  .hint { font-size: 13px; color: var(--muted); line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Первичная настройка (если в CONFIG не указан токен) -->
+  <div id="setup" class="card center hidden">
+    <h2>Первая настройка</h2>
+    <p class="hint">Один раз укажи данные GitHub. Они сохранятся только в этом браузере.</p>
+    <label>Имя владельца на GitHub (логин)</label>
+    <input type="text" id="s-owner" autocomplete="off">
+    <label>GITHUB_TOKEN (тот же, что в .env)</label>
+    <input type="password" id="s-token" autocomplete="off">
+    <label>GITHUB_REPO</label>
+    <input type="text" id="s-repo" value="school-bot-data">
+    <label>USERS_REPO</label>
+    <input type="text" id="s-users" value="logins-passwords">
+    <div class="row" style="margin-top:16px"><button class="primary" id="s-save">Сохранить</button></div>
+    <div id="s-msg" class="msg err"></div>
+  </div>
+
+  <!-- Вход -->
+  <div id="login" class="card center hidden">
+    <h2>🔑 Вход</h2>
+    <p class="hint">Логин и пароль выдаёт Telegram-бот по команде /start (новый пароль — /newpass).</p>
+    <label>Логин</label>
+    <input type="text" id="l-login" autocomplete="username" placeholder="user_ab12cd">
+    <label>Пароль</label>
+    <input type="password" id="l-pass" autocomplete="current-password">
+    <div class="row" style="margin-top:16px"><button class="primary" id="l-go">Войти</button></div>
+    <div id="l-msg" class="msg err"></div>
+    <p class="hint" style="margin-top:18px"><a href="#" id="l-reset" class="hidden" style="color:var(--muted)">Сменить настройки GitHub</a></p>
+  </div>
+
+  <!-- Основной экран -->
+  <div id="app" class="hidden">
+    <div class="row space">
+      <div>
+        <h1>📂 Мои заметки и файлы</h1>
+        <div class="muted">Логин: <b id="a-login"></b></div>
+      </div>
+      <div class="row">
+        <button id="a-refresh">Обновить</button>
+        <button id="a-out">Выйти</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button id="t-notes" class="active">📝 Заметки</button>
+      <button id="t-files">📎 Файлы</button>
+    </div>
+
+    <div id="p-notes" class="card">
+      <div class="row space" style="margin-bottom:8px">
+        <h2 style="margin:0">Заметки</h2>
+        <button class="primary" id="n-new">+ Новая заметка</button>
+      </div>
+      <div id="n-list" class="muted">Загрузка…</div>
+    </div>
+
+    <div id="p-files" class="card hidden">
+      <div class="row space" style="margin-bottom:8px">
+        <h2 style="margin:0">Файлы</h2>
+        <div>
+          <input type="file" id="f-input" class="hidden" multiple>
+          <button class="primary" id="f-up">⬆ Загрузить файл</button>
+        </div>
+      </div>
+      <div id="f-list" class="muted">Загрузка…</div>
+    </div>
+
+    <div id="editor" class="card hidden">
+      <div class="row space">
+        <h2 id="e-title" style="margin:0"></h2>
+        <button id="e-close">✕ Закрыть</button>
+      </div>
+      <textarea id="e-text" style="margin-top:12px"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="e-save">Сохранить в GitHub</button>
+      </div>
+    </div>
+
+    <div id="a-msg" class="msg"></div>
+  </div>
+</div>
+
+<script>
+/* ============ НАСТРОЙКИ ============
+   Можно заполнить здесь (тогда токен будет виден всем, кто откроет код страницы!),
+   а можно оставить пустым — тогда сайт спросит данные при первом запуске
+   и сохранит их только в браузере. */
+const CONFIG = {
+  OWNER: "",                 // твой логин на GitHub
+  TOKEN: "",                 // GITHUB_TOKEN из .env
+  GITHUB_REPO: "school-bot-data",
+  USERS_REPO: "logins-passwords"
+};
+/* =================================== */
+
+const PBKDF2_ITERATIONS = 200000; // как в bot.py
+const $ = (id) => document.getElementById(id);
+
+function getCfg() {
+  if (CONFIG.OWNER && CONFIG.TOKEN) return { ...CONFIG, fromFile: true };
+  try {
+    const s = JSON.parse(localStorage.getItem("ghcfg") || "null");
+    if (s && s.OWNER && s.TOKEN) return { ...s, fromFile: false };
+  } catch (e) {}
+  return null;
+}
+let cfg = getCfg();
+let session = null;     // { login }
+let tab = "notes";
+let editing = null;     // { path, sha|null, isNew }
+
+/* ---------- помощники ---------- */
+function show(id, on = true) { $(id).classList.toggle("hidden", !on); }
+function say(text, kind) { const m = $("a-msg"); m.textContent = text || ""; m.className = "msg " + (kind || ""); }
+function encPath(p) { return p.split("/").map(encodeURIComponent).join("/"); }
+function hexToBytes(hex) {
+  const out = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
+  return out;
+}
+function bytesToHex(buf) { return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join(""); }
+function bytesToB64(bytes) {
+  let bin = ""; const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  return btoa(bin);
+}
+async function hashPassword(password, saltHex) {
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", hash: "SHA-256", salt: hexToBytes(saltHex), iterations: PBKDF2_ITERATIONS }, key, 256);
+  return bytesToHex(bits);
+}
+function timingSafeEqual(a, b) {
+  if (a.length !== b.length) return false;
+  let r = 0; for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return r === 0;
+}
+
+/* ---------- GitHub API ---------- */
+function ghUrl(repo, path) {
+  return `https://api.github.com/repos/${encodeURIComponent(cfg.OWNER)}/${encodeURIComponent(repo)}/contents/${encPath(path)}`;
+}
+function ghHeaders(raw) {
+  return {
+    "Authorization": "Bearer " + cfg.TOKEN,
+    "Accept": raw ? "application/vnd.github.raw+json" : "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28"
+  };
+}
+async function ghCheck(res) {
+  if (res.ok) return res;
+  let detail = "";
+  try { detail = (await res.json()).message || ""; } catch (e) {}
+  const err = new Error(`GitHub ${res.status}: ${detail}`); err.status = res.status; throw err;
+}
+async function ghList(repo, path) {
+  const res = await fetch(ghUrl(repo, path), { headers: ghHeaders(false), cache: "no-store" });
+  if (res.status === 404) return [];
+  await ghCheck(res);
+  return res.json();
+}
+async function ghRaw(repo, path) {
+  const res = await fetch(ghUrl(repo, path), { headers: ghHeaders(true), cache: "no-store" });
+  if (res.status === 404) return null;
+  await ghCheck(res);
+  return res;
+}
+async function ghSha(repo, path) {
+  const res = await fetch(ghUrl(repo, path), { headers: ghHeaders(false), cache: "no-store" });
+  if (res.status === 404) return null;
+  await ghCheck(res);
+  return (await res.json()).sha;
+}
+async function ghPut(repo, path, bytes, message) {
+  const sha = await ghSha(repo, path);
+  const body = { message, content: bytesToB64(bytes) };
+  if (sha) body.sha = sha;
+  const res = await fetch(ghUrl(repo, path), {
+    method: "PUT", headers: { ...ghHeaders(false), "Content-Type": "application/json" }, body: JSON.stringify(body)
+  });
+  await ghCheck(res);
+}
+async function ghDelete(repo, path, message) {
+  const sha = await ghSha(repo, path);
+  if (!sha) return;
+  const res = await fetch(ghUrl(repo, path), {
+    method: "DELETE", headers: { ...ghHeaders(false), "Content-Type": "application/json" },
+    body: JSON.stringify({ message, sha })
+  });
+  await ghCheck(res);
+}
+
+/* ---------- Экраны ---------- */
+function route() {
+  show("setup", false); show("login", false); show("app", false);
+  if (!cfg) { show("setup"); return; }
+  if (!session) { show("login"); show("l-reset", !cfg.fromFile); return; }
+  show("app");
+  $("a-login").textContent = session.login;
+  setTab(tab);
+}
+
+/* Настройка */
+$("s-save").onclick = () => {
+  const c = {
+    OWNER: $("s-owner").value.trim(), TOKEN: $("s-token").value.trim(),
+    GITHUB_REPO: $("s-repo").value.trim() || "school-bot-data",
+    USERS_REPO: $("s-users").value.trim() || "logins-passwords"
+  };
+  if (!c.OWNER || !c.TOKEN) { $("s-msg").textContent = "Заполни логин GitHub и токен."; return; }
+  localStorage.setItem("ghcfg", JSON.stringify(c));
+  cfg = getCfg(); route();
+};
+$("l-reset").onclick = (e) => {
+  e.preventDefault(); localStorage.removeItem("ghcfg"); cfg = getCfg(); session = null; route();
+};
+
+/* Вход: проверяем пароль по хешу из users.json (PBKDF2-SHA256, как в боте) */
+async function doLogin() {
+  const login = $("l-login").value.trim();
+  const pass = $("l-pass").value;
+  const msg = $("l-msg"); msg.textContent = "";
+  if (!login || !pass) { msg.textContent = "Введи логин и пароль."; return; }
+  $("l-go").disabled = true;
+  try {
+    const res = await ghRaw(cfg.USERS_REPO, "users.json");
+    const users = res ? JSON.parse(await res.text()) : {};
+    const u = users[login];
+    const h = u ? await hashPassword(pass, u.salt) : await hashPassword(pass, "00".repeat(16));
+    if (!u || !timingSafeEqual(h, u.hash)) { msg.textContent = "Неверный логин или пароль."; return; }
+    session = { login };
+    sessionStorage.setItem("session", JSON.stringify(session));
+    $("l-pass").value = "";
+    route();
+  } catch (e) {
+    msg.textContent = e.status === 401 ? "GitHub не принял токен (проверь GITHUB_TOKEN)." : "Ошибка: " + e.message;
+  } finally { $("l-go").disabled = false; }
+}
+$("l-go").onclick = doLogin;
+$("l-pass").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
+$("l-login").addEventListener("keydown", (e) => { if (e.key === "Enter") $("l-pass").focus(); });
+
+$("a-out").onclick = () => { session = null; sessionStorage.removeItem("session"); closeEditor(); route(); };
+$("a-refresh").onclick = () => setTab(tab);
+
+/* Вкладки */
+function setTab(t) {
+  tab = t;
+  $("t-notes").classList.toggle("active", t === "notes");
+  $("t-files").classList.toggle("active", t === "files");
+  show("p-notes", t === "notes"); show("p-files", t === "files");
+  say("");
+  if (t === "notes") loadNotes(); else loadFiles();
+}
+$("t-notes").onclick = () => { closeEditor(); setTab("notes"); };
+$("t-files").onclick = () => { closeEditor(); setTab("files"); };
+
+function userDir(sub) { return `data/${session.login}/${sub}`; }
+
+function renderList(el, items, handlers, empty) {
+  el.textContent = "";
+  if (!items.length) { el.textContent = empty; return; }
+  el.className = "";
+  for (const it of items) {
+    const row = document.createElement("div"); row.className = "item";
+    const name = document.createElement("div"); name.className = "name"; name.textContent = it.name; name.title = it.name;
+    name.onclick = () => handlers.open(it);
+    row.appendChild(name);
+    const size = document.createElement("span"); size.className = "muted";
+    size.textContent = it.size > 1048576 ? (it.size / 1048576).toFixed(1) + " МБ" : Math.max(1, Math.round(it.size / 1024)) + " КБ";
+    row.appendChild(size);
+    const del = document.createElement("button"); del.className = "danger"; del.textContent = "🗑";
+    del.title = "Удалить"; del.onclick = () => handlers.del(it);
+    row.appendChild(del);
+    el.appendChild(row);
+  }
+}
+
+/* Заметки */
+async function loadNotes() {
+  const el = $("n-list"); el.className = "muted"; el.textContent = "Загрузка…";
+  try {
+    const items = (await ghList(cfg.GITHUB_REPO, userDir("notes")))
+      .filter(f => f.type === "file").sort((a, b) => b.name.localeCompare(a.name));
+    renderList(el, items, { open: openNote, del: deleteNote }, "Пока нет заметок. Отправь боту /save текст или нажми «Новая заметка».");
+  } catch (e) { el.textContent = "Ошибка: " + e.message; }
+}
+async function openNote(it) {
+  say("");
+  try {
+    const res = await ghRaw(cfg.GITHUB_REPO, it.path);
+    const text = res ? await res.text() : "";
+    openEditor(it.name, text, { path: it.path, isNew: false });
+  } catch (e) { say("Ошибка: " + e.message, "err"); }
+}
+async function deleteNote(it) {
+  if (!confirm(`Удалить заметку «${it.name}»?`)) return;
+  try { await ghDelete(cfg.GITHUB_REPO, it.path, `Удалена заметка (${session.login}, сайт)`); say("Заметка удалена.", "ok"); loadNotes(); }
+  catch (e) { say("Ошибка: " + e.message, "err"); }
+}
+$("n-new").onclick = () => {
+  const d = new Date(), p = (n) => String(n).padStart(2, "0");
+  const name = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}-${p(d.getMinutes())}-${p(d.getSeconds())}.md`;
+  openEditor("Новая заметка", "", { path: userDir("notes") + "/" + name, isNew: true });
+};
+
+/* Редактор заметки */
+function openEditor(title, text, info) {
+  editing = info;
+  $("e-title").textContent = title;
+  $("e-text").value = text;
+  show("editor"); $("editor").scrollIntoView({ behavior: "smooth" });
+}
+function closeEditor() { editing = null; show("editor", false); }
+$("e-close").onclick = closeEditor;
+$("e-save").onclick = async () => {
+  if (!editing) return;
+  const text = $("e-text").value;
+  if (editing.isNew && !text.trim()) { say("Заметка пустая.", "err"); return; }
+  $("e-save").disabled = true;
+  try {
+    await ghPut(cfg.GITHUB_REPO, editing.path, new TextEncoder().encode(text),
+      `${editing.isNew ? "Заметка" : "Правка заметки"} от ${session.login} (сайт)`);
+    say("✅ Сохранено в GitHub!", "ok"); closeEditor(); loadNotes();
+  } catch (e) { say("Ошибка: " + e.message, "err"); }
+  finally { $("e-save").disabled = false; }
+};
+
+/* Файлы */
+async function loadFiles() {
+  const el = $("f-list"); el.className = "muted"; el.textContent = "Загрузка…";
+  try {
+    const items = (await ghList(cfg.GITHUB_REPO, userDir("files")))
+      .filter(f => f.type === "file").sort((a, b) => b.name.localeCompare(a.name));
+    renderList(el, items, { open: downloadFile, del: deleteFile }, "Пока нет файлов. Пришли файл боту или загрузи отсюда.");
+  } catch (e) { el.textContent = "Ошибка: " + e.message; }
+}
+async function downloadFile(it) {
+  say("Скачиваю…");
+  try {
+    const res = await ghRaw(cfg.GITHUB_REPO, it.path);
+    if (!res) throw new Error("файл не найден");
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement("a"); a.href = url;
+    a.download = it.name.replace(/^\d{8}_\d{6}_/, ""); // убираем префикс с датой, который добавляет бот
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    say("");
+  } catch (e) { say("Ошибка: " + e.message, "err"); }
+}
+async function deleteFile(it) {
+  if (!confirm(`Удалить файл «${it.name}»?`)) return;
+  try { await ghDelete(cfg.GITHUB_REPO, it.path, `Удалён файл (${session.login}, сайт)`); say("Файл удалён.", "ok"); loadFiles(); }
+  catch (e) { say("Ошибка: " + e.message, "err"); }
+}
+$("f-up").onclick = () => $("f-input").click();
+$("f-input").onchange = async (e) => {
+  const files = [...e.target.files]; e.target.value = "";
+  for (const f of files) {
+    if (f.size > 25 * 1024 * 1024) { say(`«${f.name}» больше 25 МБ — пропущен.`, "err"); continue; }
+    say(`Загружаю «${f.name}»…`);
+    try {
+      const d = new Date(), p = (n) => String(n).padStart(2, "0");
+      const stamp = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+      const safe = f.name.replace(/[^\w.\-]/gu, "_");   // так же, как в боте
+      await ghPut(cfg.GITHUB_REPO, userDir("files") + `/${stamp}_${safe}`,
+        new Uint8Array(await f.arrayBuffer()), `Файл от ${session.login}: ${safe} (сайт)`);
+      say(`✅ «${f.name}» загружен.`, "ok");
+    } catch (err) { say("Ошибка: " + err.message, "err"); }
+  }
+  loadFiles();
+};
+
+/* Старт */
+try { session = JSON.parse(sessionStorage.getItem("session") || "null"); } catch (e) { session = null; }
+route();
+</script>
+</body>
+</html>
